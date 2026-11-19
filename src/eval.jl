@@ -29,7 +29,7 @@ Not all options are available for any FMU type, e.g. setting state is not suppor
 # Keywords
 - `dx`: An array to store the state-derivatives in. If not provided but necessary, a suitable array is allocated and returned. Not supported by CS-FMUs.
 - `y`: An array to store the system outputs in. If not provided but requested, a suitable array is allocated and returned.
-- `y_refs`: An array of value references to indicate which system outputs shall be returned.
+- `y_refs`: An array of value references to indicate which system outputs shall be returned, `:all` for all outputs, `:none` for no outputs or `:default` (default) for the default outputs of the current instance (`default_y_refs`, initialized from `fmu.default_y_refs`).
 - `x`: An array containing the states to be set. Not supported by CS-FMUs.
 - `u`: An array containing the inputs to be set.
 - `u_refs`: An array of value references to indicate which system inputs want to be set.
@@ -45,7 +45,7 @@ Not all options are available for any FMU type, e.g. setting state is not suppor
 """
 function (fmu::FMU)(;
     dx_refs::Union{AbstractVector{<:fmiValueReference},Symbol} = :none,
-    y_refs::Union{AbstractVector{<:fmiValueReference},Symbol} = :none,
+    y_refs::Union{AbstractVector{<:fmiValueReference},Symbol} = :default,
     u_refs::Union{AbstractVector{<:fmiValueReference},Symbol} = :none,
     kwargs...,
 )
@@ -68,8 +68,10 @@ function (fmu::FMU)(;
             y_refs = fmu.modelDescription.outputValueReferences
         elseif y_refs == :none
             y_refs = getEmptyValueReference(fmu)
+        elseif y_refs == :default
+            y_refs = c.default_y_refs
         else
-            @assert false "Given `y_refs` is unknown symbol `$(y_refs)`, supported are `:all` or `:none`."
+            @assert false "Given `y_refs` is unknown symbol `$(y_refs)`, supported are `:all`, `:none` or `:default`."
         end
     end
 
